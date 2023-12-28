@@ -60,7 +60,6 @@ public class Indexer {
         return document;
     }
 
-
     private void indexFile(File file) throws IOException {
         System.out.println("Indexing " + file.getCanonicalPath());
         Document document = getDocument(file);
@@ -78,7 +77,6 @@ public class Indexer {
         }
         return writer.numRamDocs();
     }
-
 
     public boolean isIndexExists() throws IOException {
         return DirectoryReader.indexExists(directory);
