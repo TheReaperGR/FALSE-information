@@ -35,10 +35,10 @@ public class Searcher {
             case "lyrics":
                 fieldToSearch = LuceneConstants.LYRICS;
                 break;
-            case "song":
+            case "songs":
                 fieldToSearch = LuceneConstants.SONG_NAME;
                 break;
-            case "album":
+            case "albums":
                 fieldToSearch = LuceneConstants.ALBUM_DIR;
                 break;
             default:
