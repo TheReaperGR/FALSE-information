@@ -7,9 +7,9 @@ import java.io.IOException;
 
 public class Parser {
     private static final String INDEX_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data";
-    private static final String DATA_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data\\songsOutput";
+   /* private static final String DATA_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data\\songsOutput";
     private static final String ALBUM_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data\\albumOutput";
-    private static final String LYRICS_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data\\lyricsOutput";
+    private static final String LYRICS_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data\\lyricsOutput";*/
     private static final String CSV_FILE_PATH2 = "E:\\Intellij IDEA projects\\false_v1\\Data\\albums.csv";
     private static final String CSV_FILE_PATH = "E:\\Intellij IDEA projects\\false_v1\\Data\\songs.csv";
     private static final String CSV_FILE_PATH3 = "E:\\Intellij IDEA projects\\false_v1\\Data\\lyrics.csv";
@@ -22,7 +22,7 @@ public class Parser {
 
             while ((line = reader.readNext()) != null) {
                 // Adjust the file path to store in the "LyricsOutput" directory
-                String txtFileName = LYRICS_DIR + "/output_" + lineNumber + ".txt";
+                String txtFileName = LuceneConstants.LYRICS_DIR + "/output_" + lineNumber + ".txt";
                 createLyricsTxt(txtFileName, header, line);
                 lineNumber++;
             }
@@ -59,7 +59,7 @@ public class Parser {
             int lineNumber = 1;
 
             while ((line = reader.readNext()) != null) {
-                String txtFileName = ALBUM_DIR + "/album_output_" + lineNumber + ".txt";
+                String txtFileName = LuceneConstants.ALBUM_DIR + "/album_output_" + lineNumber + ".txt";
                 createTxtFile(txtFileName, header, line);
                 lineNumber++;
             }
@@ -74,7 +74,7 @@ public class Parser {
             int lineNumber = 1;
 
             while ((line = reader.readNext()) != null) {
-                String txtFileName = DATA_DIR + "/output_" + lineNumber + ".txt";
+                String txtFileName = LuceneConstants.DATA_DIR + "/output_" + lineNumber + ".txt";
                 createTxtFile(txtFileName, header, line);
                 lineNumber++;
             }

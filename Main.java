@@ -2,28 +2,30 @@ import com.opencsv.exceptions.CsvValidationException;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Main {
-    private static final String INDEX_DIR = "C:\\Users\\Reaper\\IdeaProjects\\false\\src\\";
-    private static final String DATA_DIR = "C:\\Users\\Reaper\\IdeaProjects\\false\\src\\songsOutput";
-    private static final String ALBUM_DIR = "C:\\Users\\Reaper\\IdeaProjects\\false\\src\\albumOutput";
-    private static final String LYRICS_DIR = "C:\\Users\\Reaper\\IdeaProjects\\false\\src\\lyricsOutput";
-    private static final Map<String, String> SEARCH_PATHS = new HashMap<>();
+    private static final String INDEX_DIR = "E:\\Intellij IDEA projects\\false_v1\\Data";
+    private String searchType;
+    private String searchPath;
 
-    // Additional variables to keep track of the current search type and search path
-    private static String searchType;
-    private static String searchPath;
+    public static void main(String[] args) throws IOException, ParseException {
 
-    public static void main(String[] args) {
+        Main instanceOfMain = new Main();
+
         // parse all the CSVs
         try {
             Parser.parseAll();
-        } catch (IOException e) {
+            instanceOfMain.searchType = null;
+        } catch (IOException | CsvValidationException e) {
             e.printStackTrace();
-        } catch (CsvValidationException e) {
+        }
+
+        try {
+            createAllIndices();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ParseException e) {
             throw new RuntimeException(e);
         }
 
@@ -31,90 +33,123 @@ public class Main {
         GUI.renderGUI(new GUI.SearchCallback() {
             @Override
             public void onSearch(String selectedMode) {
-                searchType = selectedMode;
+                instanceOfMain.searchType = selectedMode;
+                System.out.println("in main search type set to: " + instanceOfMain.searchType);
                 try {
-                    regularSearch(searchType);
+                    createAndSearchIndex(instanceOfMain.searchType);
                 } catch (IOException | ParseException e) {
                     throw new RuntimeException(e);
                 }
             }
         });
-
-        // create indices for all paths
-        try {
-            createAllIndices();
-        } catch (IOException | ParseException e) {
-            throw new RuntimeException(e);
-        }
     }
 
-    private static void createAllIndices() throws IOException, ParseException {
+    private static void createAndSearchIndex(String searchType) throws IOException, ParseException {
+        /*
         Indexer indexer = new Indexer(INDEX_DIR);
 
-        if (indexer.isIndexExists()) {
-            System.out.println("Index already exists. Skipping indexing step.");
-        } else {
+        if (!indexer.isIndexExists(searchType)) {
             try {
                 int numIndexed = 0;
                 long startTime = System.currentTimeMillis();
 
-                numIndexed += indexer.createIndex(LYRICS_DIR, new TextFileFilter());
-                numIndexed += indexer.createIndex(DATA_DIR, new TextFileFilter());
-                numIndexed += indexer.createIndex(ALBUM_DIR, new TextFileFilter());
+
+                // Create index based on search type
+                switch (searchType) {
+                    case "lyrics":
+                        numIndexed = indexer.createIndex(LuceneConstants.LYRICS_DIR, new TextFileFilter(), "lyrics");
+                        break;
+                    case "songs":
+                        numIndexed2 = indexer.createIndex(LuceneConstants.DATA_DIR, new TextFileFilter(), "songs");
+                        break;
+                    case "albums":
+                        numIndexed3 = indexer.createIndex(LuceneConstants.ALBUM_DIR, new TextFileFilter(), "albums");
+                        break;
+                    default:
+                        System.out.println("Invalid search type.");
+                }
 
                 long endTime = System.currentTimeMillis();
                 System.out.println(numIndexed + " File(s) indexed, time taken: " +
                         (endTime - startTime) + " ms");
             } finally {
-                indexer.close(); // Ensure that the indexer is closed even if an exception occurs
+                indexer.close();
             }
-        }
+        } else {
+            System.out.println("Index for " + searchType + " already exists. Skipping indexing step.");
+        }*/
+
+        // Perform the search
+        performSearch(searchType);
     }
 
-    public static void regularSearch(String st) throws IOException, ParseException {
-        searchType = st;
-        String searchDirectory = setSearchPath();
+    private static void performSearch(String searchType) throws IOException, ParseException {
+        Main mainInstance = new Main();
+        String searchDirectory = mainInstance.setSearchPath(searchType);
+        System.out.println("in main / regularSearch search path set to: " + searchDirectory);
 
-        Searcher searcher = new Searcher(INDEX_DIR);
-        long startTime = System.currentTimeMillis();
+        List<SearchResult> searchResults;
 
         // get user query from GUI search-box:
         String query = GUI.getUserQuery();
 
-        List<SearchResult> searchResults = searcher.search(query, searchType, searchDirectory);
 
+        Searcher searcher = null;
+        switch (searchType) {
+            case "lyrics":
+                searcher = new Searcher(LuceneConstants.LYRICS_INDEX_DIR, searchType);
+                searchResults = searcher.search(query, searchType, searchDirectory);
+                searcher.close();
+                break;
+            case "songs":
+                searcher = new Searcher(LuceneConstants.SONGS_INDEX_DIR, searchType);
+                searchResults = searcher.search(query, searchType, searchDirectory);
+                searcher.close();
+                break;
+            case "albums":
+                searcher = new Searcher(LuceneConstants.ALBUMS_INDEX_DIR, searchType);
+                searchResults = searcher.search(query, searchType, searchDirectory);
+                searcher.close();
+                break;
+            default:
+                System.out.println("Invalid search type.");
+                searchResults = searcher.search(null, null, null);
+        }
+
+        long startTime = System.currentTimeMillis();
         long endTime = System.currentTimeMillis();
-        searcher.close();
-        System.out.println("Search completed in " + (endTime - startTime) + " ms");
+        
+        GUI.appendInfoText("Search completed in " + (endTime - startTime) + " ms");
 
         // note: once the list of all results has been created we then send them to the GUI so it can print them out
         for (SearchResult result : searchResults) {
             GUI.appendResultTextArea("File Path: " + result.getFilePath());
+            System.out.println("in main.regSearch path set to: " + result.getFilePath());
             GUI.appendResultTextArea("Name: " + result.getName());
             GUI.appendResultTextArea("Artist: " + result.getArtist());
 
             // Check the search type for specific fields
-            if ("song".equals(searchType)) {
+            if ("songs".equals(searchType)) {
                 GUI.appendResultTextArea("Album Name: " + result.getAlbumName());
-            } else if ("album".equals(searchType)) {
+            } else if ("albums".equals(searchType)) {
                 GUI.appendResultTextArea("Year: " + result.getYear());
             }
 
             float score = result.getScore();    // get the score and send it
-            GUI.appendInfoText("Score: " + Float.toString(score));
+            GUI.appendResultTextArea("Score: " + Float.toString(score));
         }
     }
 
-    private static String setSearchPath() {
+    private String setSearchPath(String searchType) {
         switch (searchType) {
             case "lyrics":
-                searchPath = LYRICS_DIR;
+                searchPath = LuceneConstants.LYRICS_DIR;
                 break;
             case "songs":
-                searchPath = DATA_DIR;
+                searchPath = LuceneConstants.DATA_DIR;
                 break;
             case "albums":
-                searchPath = ALBUM_DIR;
+                searchPath = LuceneConstants.ALBUM_DIR;
                 break;
             default:
                 System.out.println("Invalid search type.");
@@ -122,5 +157,30 @@ public class Main {
         }
 
         return searchPath;
+    }
+
+    private static void createAllIndices() throws IOException, ParseException {
+        Indexer indexer = new Indexer(INDEX_DIR);
+
+        if (indexer.isIndexExists("lyrics") && indexer.isIndexExists("songs") && indexer.isIndexExists("albums")) {
+            System.out.println("Indices already exist. Skipping indexing step.");
+        } else {
+            try {
+                long startTime = System.currentTimeMillis();
+
+                int numLyricsIndexed = indexer.createIndex(LuceneConstants.LYRICS_DIR, new TextFileFilter(), "lyrics");
+                int numSongsIndexed = indexer.createIndex(LuceneConstants.DATA_DIR, new TextFileFilter(), "songs");
+                int numAlbumsIndexed = indexer.createIndex(LuceneConstants.ALBUM_DIR, new TextFileFilter(), "albums");
+
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Lyrics: " + numLyricsIndexed + " file(s) indexed.");
+                System.out.println("Songs: " + numSongsIndexed + " file(s) indexed.");
+                System.out.println("Albums: " + numAlbumsIndexed + " file(s) indexed.");
+                System.out.println("Time taken: " + (endTime - startTime) + " ms");
+            } finally {
+                indexer.close(); // Ensure that the indexer is closed even if an exception occurs
+            }
+        }
     }
 }

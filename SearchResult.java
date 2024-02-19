@@ -1,11 +1,12 @@
 public class SearchResult {
-    private final String searchDirectory;
+    private String searchDirectory;
     private String filePath;
     private String name;
     private String artist;
     private String albumName;
     private int year;
     private float score;
+    private String songName;
 
     public SearchResult(String filePath, String content, float score, String searchType, String searchDirectory) {
         this.filePath = filePath;
@@ -33,31 +34,54 @@ public class SearchResult {
             this.year = 0;
         }
     }
+    public void setSongName(String songName){this.songName = songName;}
 
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
     public String getFilePath() {
         return filePath;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setArtist(String artist) {
+        this.artist = artist;
+    }
+
     public String getArtist() {
         return artist;
     }
-
     public String getSearchDirectory() {
         return searchDirectory;
     }
+    public void setAlbumName(String albumName) {
+        this.albumName = albumName;
+    }
     public String getAlbumName() {
         return albumName;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
     }
 
     public int getYear() {
         return year;
     }
 
+    public void setScore(float score) {
+        this.score = score;
+    }
+
     public float getScore() {
         return score;
     }
+
 }
